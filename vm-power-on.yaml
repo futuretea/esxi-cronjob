@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: vm-power-on
+  namespace: default
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity: {}
+          containers:
+          - args:
+            - vm.power
+            - -on
+            - vm1
+            command:
+            - /govc
+            env:
+            - name: GOVC_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: govc
+                  optional: false
+            - name: GOVC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: govc
+                  optional: false
+            - name: GOVC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: govc
+                  optional: false
+            - name: GOVC_INSECURE
+              value: "true"
+            image: vmware/govc
+            imagePullPolicy: IfNotPresent
+            name: container-0
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 30
+  schedule: 0 0 * * *
+  successfulJobsHistoryLimit: 3
